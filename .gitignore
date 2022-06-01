@@ -127,3 +127,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# CUSTOM IGNORE FILES
+based.json
+admins.json
