@@ -72,3 +72,14 @@ class bot_settings:
                 return json.load(api_file)
         else:
             raise ValueError("No api credentials were found")
+
+    def get_banned_words(self):
+        """
+        If a json containing banned words exists, read it and return it
+        This file will contain regex entries of words we want to remove from a discord channel
+        """
+        if Path("banned_words.json").is_file():
+            with open("banned_words.json", "r") as words_file:
+                return json.load(words_file)
+        else:
+            return None
