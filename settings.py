@@ -3,7 +3,7 @@ from pathlib import Path
 import json
 
 
-class bot_settings:
+class bot:
     """
     This class is used to read/write to data stored for the bot
     It manages our credentials along with an admin list as well as any other data we might need
@@ -83,3 +83,37 @@ class bot_settings:
                 return json.load(words_file)
         else:
             return None
+
+    def log_message(self, message):
+        """
+        Prints the message and it's relevant data in the console
+
+        :param discord.Message message: The message that was sent
+        :return: None
+        """
+        msg_text = str(message.content)
+        author = str(message.author)
+        server = str(message.guild)
+        channel = str(message.channel)
+        admin_status = str(self.is_admin(author))
+
+        print(
+            f'NEW MESSAGE "{msg_text}" (USER: "{author}" Server: "{server}" Channel: "{channel}" ADMIN: {admin_status})'
+        )
+
+    def create_log_csv(self, name, data, headers=None):
+        """
+        Creates a CSV with message data
+        :param str name: Name of the file
+        :param list headers: The headers of the csv file
+        :param list data: The messages we want to log
+        :return: None
+        """
+        if not headers:
+            headers = ["User", "Message", "Date", "Channel", "Server"]
+
+        with open(name, "w+") as file:
+            writer = csv.writer(file)
+            writer.writerow(headers)
+            for row in data:
+                writer.writerow(row)

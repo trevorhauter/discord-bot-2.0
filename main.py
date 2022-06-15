@@ -14,29 +14,6 @@ intents.members = True
 client = commands.Bot(command_prefix=":", intents=intents)
 
 
-class bot:
-    """
-    This class processes messages and executes commands
-    """
-
-    def log_message(self, message):
-        """
-        Prints the message and it's relevant data in the console
-
-        :param discord.Message message: The message that was sent
-        :return: None
-        """
-        msg_text = str(message.content)
-        author = str(message.author)
-        server = str(message.guild)
-        channel = str(message.channel)
-        admin_status = str(bot_profile.is_admin(author))
-
-        print(
-            f'NEW MESSAGE "{msg_text}" (USER: "{author}" Server: "{server}" Channel: "{channel}" ADMIN: {admin_status})'
-        )
-
-
 @client.event
 async def on_ready():
     """
@@ -57,24 +34,7 @@ async def on_message(message):
 
     msg_txt = str(message.content).lower()
     author = str(message.author)
-    author_is_admin = bot_profile.is_admin(author)
-
-    def create_log_csv(name, data, headers=None):
-        """
-        Creates a CSV with message data
-        :param str name: Name of the file
-        :param list headers: The headers of the csv file
-        :param list data: The messages we want to log
-        :return: None
-        """
-        if not headers:
-            headers = ["User", "Message", "Date", "Channel", "Server"]
-
-        with open(name, "w+") as file:
-            writer = csv.writer(file)
-            writer.writerow(headers)
-            for row in data:
-                writer.writerow(row)
+    author_is_admin = bot.is_admin(author)
 
     if msg_txt.startswith("!"):
 
@@ -82,14 +42,14 @@ async def on_message(message):
         match = re.match(r"!addadmin +(?P<username>[\w#]+)", msg_txt)
         if match and author_is_admin:
             username = match.groupdict()["username"]
-            bot_profile.add_admin(username)
+            bot.add_admin(username)
             await message.channel.send(username + " has been added as an admin")
 
         # Command for removing an admin (ADMINS ONLY)
         match = re.match(r"!removeadmin +(?P<username>[\w#]+)", msg_txt)
         if match and author_is_admin:
             username = match.groupdict()["username"]
-            bot_profile.remove_admin(username)
+            bot.remove_admin(username)
             await message.channel.send(username + " has been removed as an admin")
 
         # Command to log all messages in a channel (ADMINS ONLY)
@@ -124,20 +84,26 @@ async def on_message(message):
                     )
 
             # Send a message to the channel letting them know how many matches we found
-            await message.channel.send(
-                f"There are {len(message_data)} messages in this channel"
-            )
-            # If the user is an admin, send them the CSV
-            if author_is_admin and message_data:
-                csv_name = f"{message.guild.name}_{message.channel}_log.csv"
-                create_log_csv(csv_name, message_data)
-                file = discord.File(csv_name)
-                await message.author.send(file=file)
-                print("Logged channel file sent to admin")
-                del message_data
-                os.remove(csv_name)
+            if message_data:
+                if keyword:
+                    await message.channel.send(
+                        f"The word {keyword} appeared in {len(message_data)} messages in this channel"
+                    )
+                else:
+                    await message.channel.send(
+                        f"There are {len(message_data)} messages in this channel"
+                    )
+                # If the user is an admin, send them the CSV
+                if author_is_admin:
+                    csv_name = f"{message.guild.name}_{message.channel}_log.csv"
+                    bot.create_log_csv(csv_name, message_data)
+                    file = discord.File(csv_name)
+                    await message.author.send(file=file)
+                    print("Logged channel file sent to admin")
+                    del message_data
+                    os.remove(csv_name)
 
-            print("channel logged")
+                print("channel logged")
 
         # Command to clean the channel of any banned words (ADMINS ONLY)
         match = re.match(r"!cleanchannel", msg_txt)
@@ -148,7 +114,7 @@ async def on_message(message):
             to words or phrases we are trying to remove
             """
             if author_is_admin:
-                banned_words = bot_profile.get_banned_words()
+                banned_words = bot.get_banned_words()
                 if banned_words:
                     await message.channel.send(
                         "Cleaning discord channel, this may take a bit..."
@@ -175,7 +141,7 @@ async def on_message(message):
 
                     if messages_removed:
                         csv_name = f"removed_messages_{message.guild.name}_{message.channel}_log.csv"
-                        create_log_csv(csv_name, messages_removed)
+                        bot.create_log_csv(csv_name, messages_removed)
                         file = discord.File(csv_name)
                         await message.author.send(file=file)
 
@@ -202,7 +168,7 @@ async def on_message(message):
         match = re.match(r"!listadmins", msg_txt)
         if match:
             admin_list_message = "-- ADMINS --\n" + "".join(
-                "      " + str(admin) + "\n" for admin in bot_profile.admins
+                "      " + str(admin) + "\n" for admin in bot.admins
             )
             await message.channel.send(admin_list_message)
 
@@ -220,10 +186,8 @@ async def on_message(message):
 Creates our bot profile for managing our data
 Creates our bot class instance to execute commands
 """
-bot_profile = bot_settings()
 bot = bot()
 
-
 # Start the bot
-client.run(bot_profile.get_api_token())
+client.run(bot.get_api_token())
 print("Bot Finished")
