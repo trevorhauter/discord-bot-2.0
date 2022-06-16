@@ -84,6 +84,17 @@ class bot:
         else:
             return None
 
+    def get_rude_phrases(self):
+        """
+        If a json containing rude phrases exists, read it and return iti
+        """
+        if Path("rude_phrases.json").is_file():
+            with open("rude_phrases.json", "r") as rude_phrases:
+                return json.load(rude_phrases)
+        else:
+            return None
+
+
     def log_message(self, message):
         """
         Prints the message and it's relevant data in the console

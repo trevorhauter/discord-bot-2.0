@@ -1,11 +1,12 @@
 import os
+import random
 import re
 
 import discord
 import csv
 from discord.ext import commands
 
-from settings import bot_settings
+from settings import bot
 
 
 # Random discord configurations honestly idk what this does
@@ -172,13 +173,21 @@ async def on_message(message):
             )
             await message.channel.send(admin_list_message)
 
+        # Command that sends a random message from a list of "rude" messages stored in a local json file
+        match = re.match(r"!rude", msg_txt)
+        if match:
+            rude_phrases = bot.get_rude_phrases()
+            if rude_phrases:
+                await message.author.send(random.choice(rude_phrases))
+
+        # Command to list all the available commands
         match = re.match(r"!help", msg_txt)
         if match:
             admin_command_list = ["!addadmin <user>", "!removeadmin <user>", "!logchannel <optional keyword>", "!cleanchannel"]
-            regular_command_list = ["!listadmins", "!help"]
-            command_list = "-- COMMANDS --\n" + "".join("      " + command + "\n" for command in regular_command_list)
+            regular_command_list = ["!listadmins", "!rude", "!help"]
+            command_list = "-- COMMANDS --\n" + "".join("" + command + "\n" for command in regular_command_list)
             if author_is_admin:
-                command_list += "\n-- ADMIN COMMANDS --\n" + "".join("      " + command + "\n" for command in admin_command_list)
+                command_list += "\n-- ADMIN COMMANDS --\n" + "".join("" + command + "\n" for command in admin_command_list)
             await message.channel.send(command_list)
 
 
